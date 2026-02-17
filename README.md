@@ -2,6 +2,9 @@
 
 A free, local voice-to-text tool that transcribes your speech and types it anywhere — browser, VS Code, Notepad, Slack, or any other application. No cloud subscription required.
 
+If you want to learn how to build tools like this yourself, 
+subscribe to [FuturMinds](https://www.youtube.com/channel/UCzsmpPhpoweC6itJd_oAt3w).
+
 ---
 
 ## Features
@@ -17,6 +20,23 @@ A free, local voice-to-text tool that transcribes your speech and types it anywh
 | **AI rewriting** | Optional polish via Gemini, OpenAI, or Claude — with custom style/tone instructions |
 | **Transcription history** | Last 100 transcriptions with copy-on-click |
 | **Cross-platform** | Windows 10/11 and macOS |
+
+---
+
+## ⬇️ Download & Use Instantly (No Setup Required)
+
+**Don't want to deal with Python or code? Just download and run.**
+
+👉 **[Download WisprTool.exe](/releases/latest)** — Windows 10/11, no installation needed.
+
+1. Download `WhisperTool.exe` from the link above
+2. Double-click to run
+3. Hold **Alt + Ctrl**, speak, release — text pastes wherever your cursor is
+
+> First launch downloads the Whisper model (~104 MB) once. Everything after that is instant.
+
+Want to see how this was built from scratch in 20 minutes?
+📺 **[Watch the full build on YouTube](YOUR_VIDEO_LINK)**
 
 ---
 
@@ -82,7 +102,10 @@ Share the single `WisprTool.exe` file with anyone on Windows. They need no addit
 2. Choose a provider: **Gemini**, **OpenAI**, or **Claude**
 3. Paste your API key
 4. Optionally add style/tone instructions, e.g. *"Professional and concise"*
-5. Every transcription is automatically sent to the AI for polishing before pasting
+5. Click **Apply Settings** to save (you'll see a green confirmation)
+6. Every transcription is now automatically polished by the AI before pasting
+
+If the AI call fails, the error message appears in red below the Apply button.
 
 ---
 
@@ -127,13 +150,19 @@ wisprTool/
 ├── main.py              # Main application (UI, audio, transcription, AI)
 ├── text_processor.py    # Text post-processing (fillers, backtrack, lists, punctuation)
 ├── requirements.txt     # Python dependencies
+│
 ├── install.bat          # Windows: install dependencies
 ├── run.bat              # Windows: launch without console window
 ├── run.command          # macOS: launch script
 ├── build.bat            # Windows: build single .exe
 ├── build.sh             # macOS: build single binary
-├── config.json          # Auto-created user settings (hotkey, API keys, etc.)
-└── README.md            # This file
+│
+├── VERSION              # Current version (read by the app at runtime)
+├── CHANGELOG.md         # Release history
+├── README.md            # This file
+├── .gitignore           # Git ignore rules
+│
+└── config.json          # Auto-created at runtime (not committed)
 ```
 
 ---
@@ -200,6 +229,46 @@ All AI API calls use Python's built-in `urllib` — no extra HTTP library needed
 
 ---
 
+## Versioning & Releases
+
+WisprTool uses [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`).
+
+**Where the version lives:**
+- `VERSION` file at the project root — single source of truth
+- Shown in the app title bar: *"WhisperTool v1.0.0 (by FuturMinds)"*
+- Bundled into the exe automatically by the build scripts
+
+**To cut a new release:**
+
+```bash
+# 1. Update the VERSION file
+echo "1.1.0" > VERSION
+
+# 2. Update CHANGELOG.md with new entries under ## [1.1.0]
+
+# 3. Commit, tag, push
+git add VERSION CHANGELOG.md
+git commit -m "Release v1.1.0"
+git tag -a v1.1.0 -m "Release v1.1.0 — <short summary>"
+git push origin master --tags
+
+# 4. Build the exe (Windows) or binary (macOS)
+build.bat        # Windows
+./build.sh       # macOS
+
+# 5. Upload dist/WisprTool.exe as a GitHub Release asset
+gh release create v1.1.0 dist/WisprTool.exe --title "v1.1.0" --notes "See CHANGELOG.md"
+```
+
+**Version bumping guide:**
+- `PATCH` (1.0.0 → 1.0.1) — bug fixes, minor tweaks
+- `MINOR` (1.0.0 → 1.1.0) — new features, backward compatible
+- `MAJOR` (1.0.0 → 2.0.0) — breaking changes to config or behavior
+
+All past releases are documented in [CHANGELOG.md](CHANGELOG.md).
+
+---
+
 ## Troubleshooting
 
 **No text is pasted**
@@ -220,3 +289,10 @@ All AI API calls use Python's built-in `urllib` — no extra HTTP library needed
 
 **First run is slow**
 - The Whisper model (~150 MB for `base`) downloads once on first use
+
+
+## Feature Requests
+
+Drop feature requests as GitHub Issues — the most upvoted ones get built in the next version.
+
+If this saved you $12/month, a GitHub star takes 2 seconds and helps others find it.

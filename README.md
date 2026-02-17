@@ -27,7 +27,7 @@ subscribe to [FuturMinds](https://www.youtube.com/channel/UCzsmpPhpoweC6itJd_oAt
 
 **Don't want to deal with Python or code? Just download and run.**
 
-👉 **[Download WisprTool.exe](/releases/latest)** — Windows 10/11, no installation needed.
+👉 **[Download WisprTool.exe](https://github.com/futurminds/whispertool/releases/download/v1.0.0/WhisperTool.exe)** — Windows 10/11, no installation needed.
 
 1. Download `WhisperTool.exe` from the link above
 2. Double-click to run

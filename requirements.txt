@@ -4,3 +4,4 @@ numpy
 pynput
 pyperclip
 pyautogui
+pytest

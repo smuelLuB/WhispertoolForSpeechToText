@@ -702,32 +702,34 @@ class App:
         self.capturing_hotkey = True
         self._capture_keys.clear()
         self._capture_max.clear()
-        self.hotkey_var.set("Press modifier keys...")
+        self.hotkey_var.set("Press & release keys (Esc to cancel)...")
         self.hotkey_btn.config(state="disabled")
         self.root.focus_force()
 
+    def _cancel_hotkey_capture(self):
+        """Cancel hotkey capture and restore previous setting."""
+        self.capturing_hotkey = False
+        self._capture_keys.clear()
+        self._capture_max.clear()
+        self.hotkey_var.set(hotkey_label(self.hotkey_set))
+        self.hotkey_btn.config(state="normal")
+
+    def _finalize_hotkey_capture(self):
+        """Save the captured hotkey combination."""
+        self.cfg["hotkey"] = sorted(self._capture_max)
+        self.hotkey_set = set(self._capture_max)
+        self.hotkey_var.set(hotkey_label(self.hotkey_set))
+        save_config(self.cfg)
+        self.capturing_hotkey = False
+        self.hotkey_btn.config(state="normal")
+
     def _on_tk_keypress(self, event):
-        if not self.capturing_hotkey:
-            return
-        name = normalize_tk(event.keysym)
-        if name:
-            self._capture_keys.add(name)
-            self._capture_max.update(self._capture_keys)
-            self.hotkey_var.set(hotkey_label(self._capture_keys))
+        # Capture is handled by pynput (global listener) for reliability.
+        # Tk events for modifier keys can be intercepted by the OS (e.g. Alt).
+        pass
 
     def _on_tk_keyrelease(self, event):
-        if not self.capturing_hotkey:
-            return
-        name = normalize_tk(event.keysym)
-        if name:
-            self._capture_keys.discard(name)
-        if not self._capture_keys and len(self._capture_max) >= 2:
-            self.cfg["hotkey"] = sorted(self._capture_max)
-            self.hotkey_set = set(self._capture_max)
-            self.hotkey_var.set(hotkey_label(self.hotkey_set))
-            save_config(self.cfg)
-            self.capturing_hotkey = False
-            self.hotkey_btn.config(state="normal")
+        pass
 
     # ── AI config ────────────────────────────────────────────────────
 
@@ -941,8 +943,18 @@ class App:
     # ── Pynput handlers ──────────────────────────────────────────────
 
     def _on_press(self, key):
+        # ── Hotkey capture mode (pynput, reliable for modifiers) ──
         if self.capturing_hotkey:
+            name = normalize_pynput(key)
+            if name:
+                self._capture_keys.add(name)
+                self._capture_max.update(self._capture_keys)
+                self.hotkey_var.set(hotkey_label(self._capture_keys))
+            elif key == pynput_kb.Key.esc:
+                self._cancel_hotkey_capture()
             return
+
+        # ── Normal recording mode ──
         name = normalize_pynput(key)
         if name:
             self.pressed_keys.add(name)
@@ -950,15 +962,25 @@ class App:
                 self._start_recording()
 
     def _on_release(self, key):
+        # ── Hotkey capture mode ──
         if self.capturing_hotkey:
+            name = normalize_pynput(key)
+            if name:
+                self._capture_keys.discard(name)
+            # Complete capture when all keys released and ≥2 modifiers captured
+            if not self._capture_keys and len(self._capture_max) >= 2:
+                self._finalize_hotkey_capture()
             return
+
+        # ── Normal recording mode ──
         name = normalize_pynput(key)
         if name:
-            if self.recording and name in self.hotkey_set:
+            self.pressed_keys.discard(name)
+            # Only stop recording when ALL hotkey keys have been released
+            if self.recording and not (self.pressed_keys & self.hotkey_set):
                 threading.Thread(
                     target=self._stop_and_transcribe, daemon=True,
                 ).start()
-            self.pressed_keys.discard(name)
 
     # ── Main-thread tick ─────────────────────────────────────────────
 

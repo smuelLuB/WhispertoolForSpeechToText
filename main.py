@@ -412,6 +412,7 @@ class App:
         self.punct_var = tk.BooleanVar(value=self.cfg["smart_punctuation"])
         self.ai_var = tk.BooleanVar(value=self.cfg["ai_rewrite"])
         self.provider_var = tk.StringVar(value=self.cfg.get("ai_provider", "Gemini"))
+        self.model_var = tk.StringVar(value=self.cfg.get("model_size", "base"))
 
         self._build_ui()
         self.overlay = FloatingOverlay(self.root)
@@ -589,6 +590,21 @@ class App:
             ttk.Checkbutton(
                 ff, text=label, variable=var, command=self._save_features,
             ).pack(anchor="w", padx=16, pady=3)
+
+        # Model size selector
+        model_row = ttk.Frame(ff)
+        model_row.pack(fill="x", padx=16, pady=(6, 5))
+        ttk.Label(model_row, text="Whisper model:").pack(side="left")
+        self.model_combo = ttk.Combobox(
+            model_row,
+            textvariable=self.model_var,
+            values=["tiny", "base", "small", "medium", "large-v3"],
+            state="readonly",
+            width=12,
+        )
+        self.model_combo.pack(side="left", padx=(8, 0))
+        self.model_combo.bind("<<ComboboxSelected>>", self._on_model_change)
+
         ttk.Frame(ff).pack(pady=2)
 
         # ── AI Rewriting ─────────────────────────────────────────────
@@ -810,10 +826,26 @@ class App:
 
     # ── Model ────────────────────────────────────────────────────────
 
+    def _on_model_change(self, _event=None):
+        """Save model choice and reload in background."""
+        self.cfg["model_size"] = self.model_var.get()
+        save_config(self.cfg)
+        self._pending_status = "loading"
+        self.busy = True
+        threading.Thread(target=self._load_model, daemon=True).start()
+
     def _load_model(self):
         sz = self.cfg.get("model_size", "base")
-        self.model = WhisperModel(sz, device="cpu", compute_type="int8")
+        # device="auto" → CUDA GPU if available, else CPU
+        # compute_type="default" → float16 on GPU, int8_float16 on CPU
+        self.model = WhisperModel(
+            sz,
+            device="auto",
+            compute_type="default",
+            cpu_threads=4,
+        )
         self._pending_status = "ready"
+        self.busy = False
 
     # ── Audio & Transcription ────────────────────────────────────────
 
@@ -877,7 +909,12 @@ class App:
 
             lang = self.cfg.get("language", "en") or None
             segments, _ = self.model.transcribe(
-                tmp_path, beam_size=5, language=lang, vad_filter=True,
+                tmp_path, beam_size=8, language=lang, vad_filter=True,
+                vad_parameters=dict(
+                    threshold=0.5,
+                    min_speech_duration_ms=250,
+                    min_silence_duration_ms=2000,
+                ),
             )
             raw = " ".join(s.text for s in segments).strip()
 

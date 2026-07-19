@@ -53,7 +53,7 @@ PROVIDERS = ["Gemini", "OpenAI", "Claude"]
 
 DEFAULT_CONFIG = {
     "hotkey": ["alt", "ctrl"],
-    "model_size": "base",
+    "model_size": "small",
     "language": "en",
     "remove_fillers": True,
     "backtrack": True,

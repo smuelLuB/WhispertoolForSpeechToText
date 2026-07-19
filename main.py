@@ -903,11 +903,8 @@ class App:
 
                 # Step 3: Paste at cursor
                 time.sleep(0.15)
-                old_clip = pyperclip.paste()
                 pyperclip.copy(text)
                 pyautogui.hotkey(*PASTE_KEYS)
-                time.sleep(0.05)
-                pyperclip.copy(old_clip)
 
                 self._pending_history = text
 

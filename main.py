@@ -740,7 +740,7 @@ class App:
         # Clear any stale error/feedback from the previous provider
         self.ai_error_var.set("")
         self.ai_feedback_var.set("(unsaved)")
-        self.ai_feedback_lbl.config(foreground="gray")
+        self.ai_feedback_lbl.config(foreground="#888888")
 
     def _apply_ai_config(self):
         """Explicitly save all AI settings and give visual confirmation."""

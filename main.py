@@ -6,8 +6,6 @@ import sys
 import json
 import math
 import time
-import wave
-import tempfile
 import threading
 import platform
 import urllib.request
@@ -899,17 +897,11 @@ class App:
             self._pending_status = "ready"
             return
 
-        tmp_path = tempfile.mktemp(suffix=".wav")
+        # Pass numpy array directly — faster-whisper accepts it, no WAV I/O needed
+        lang = self.cfg.get("language", "en") or None
         try:
-            with wave.open(tmp_path, "wb") as wf:
-                wf.setnchannels(1)
-                wf.setsampwidth(2)
-                wf.setframerate(SAMPLE_RATE)
-                wf.writeframes((audio * 32767).astype(np.int16).tobytes())
-
-            lang = self.cfg.get("language", "en") or None
             segments, _ = self.model.transcribe(
-                tmp_path, beam_size=8, language=lang, vad_filter=True,
+                audio, beam_size=8, language=lang, vad_filter=True,
                 vad_parameters=dict(
                     threshold=0.5,
                     min_speech_duration_ms=250,
@@ -967,12 +959,6 @@ class App:
         except Exception as e:
             print(f"[!] Transcription error: {e}")
         finally:
-            for _ in range(5):
-                try:
-                    os.unlink(tmp_path)
-                    break
-                except (PermissionError, FileNotFoundError):
-                    time.sleep(0.1)
             self.busy = False
             self.overlay.request_hide()
             self._pending_status = "ready"

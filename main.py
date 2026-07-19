@@ -401,11 +401,7 @@ class App:
         self.root.minsize(500, 700)
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
 
-        style = ttk.Style()
-        try:
-            style.theme_use("vista" if not IS_MAC else "aqua")
-        except tk.TclError:
-            pass
+        self._apply_dark_theme()
 
         # ── Variables ────────────────────────────────────────────────
         self.status_var = tk.StringVar(value="Loading model...")
@@ -433,6 +429,104 @@ class App:
 
     # ── UI ───────────────────────────────────────────────────────────
 
+    def _apply_dark_theme(self):
+        """Apply always-on dark color scheme to all ttk and classic tk widgets."""
+        # ── Color palette ─────────────────────────────────────────
+        BG        = "#121212"
+        SURFACE   = "#1e1e2e"
+        FG        = "#e0e0e0"
+        FG_SUBTLE = "#888888"
+        ACCENT    = "#22d3ee"
+        BORDER    = "#333333"
+        SEL_BG    = "#0e7490"
+        SEL_FG    = "#ffffff"
+
+        # ── Root window ───────────────────────────────────────────
+        self.root.configure(bg=BG)
+
+        # ── ttk Style ─────────────────────────────────────────────
+        style = ttk.Style()
+        try:
+            style.theme_use("clam")
+        except tk.TclError:
+            pass  # fall back to whatever is available
+
+        # --- Base frame surfaces ---
+        style.configure("TFrame",       background=SURFACE)
+        style.configure("TLabelframe",  background=SURFACE, foreground=FG,
+                        bordercolor=BORDER, darkcolor=BORDER, lightcolor=BORDER)
+        style.configure("TLabelframe.Label", background=SURFACE, foreground=FG)
+
+        # --- Labels ---
+        style.configure("TLabel", background=SURFACE, foreground=FG)
+
+        # --- Buttons ---
+        style.configure("TButton",
+            background="#2a2a3a", foreground=FG,
+            bordercolor=BORDER, darkcolor="#1a1a2a", lightcolor="#3a3a4a",
+            focuscolor="none",
+        )
+        style.map("TButton",
+            background=[("active", "#3a3a4a"), ("pressed", "#1a1a2a"),
+                        ("disabled", "#1a1a2a")],
+            foreground=[("disabled", "#555555")],
+        )
+
+        # --- Checkbuttons ---
+        style.configure("TCheckbutton",
+            background=SURFACE, foreground=FG,
+            indicatorcolor=SURFACE, indicatorbackground=SURFACE,
+        )
+        style.map("TCheckbutton",
+            background=[("active", SURFACE)],
+            indicatorcolor=[("selected", ACCENT)],
+        )
+
+        # --- Combobox ---
+        style.configure("TCombobox",
+            fieldbackground="#2a2a3a", background="#2a2a3a",
+            foreground=FG, arrowcolor=FG,
+            bordercolor=BORDER, darkcolor=BORDER, lightcolor=BORDER,
+        )
+        style.map("TCombobox",
+            fieldbackground=[("readonly", "#2a2a3a")],
+            foreground=[("readonly", FG)],
+            selectbackground=[("readonly", "#2a2a3a")],
+            selectforeground=[("readonly", FG)],
+        )
+        self.root.option_add("*TCombobox*Listbox.background", "#2a2a3a")
+        self.root.option_add("*TCombobox*Listbox.foreground", FG)
+        self.root.option_add("*TCombobox*Listbox.selectBackground", SEL_BG)
+        self.root.option_add("*TCombobox*Listbox.selectForeground", SEL_FG)
+
+        # --- Entry ---
+        style.configure("TEntry",
+            fieldbackground="#2a2a3a", foreground=FG,
+            bordercolor=BORDER, darkcolor=BORDER, lightcolor=BORDER,
+            insertcolor=FG,
+        )
+
+        # --- Scrollbar ---
+        style.configure("TScrollbar",
+            background=SURFACE, troughcolor=BG,
+            bordercolor=BG, arrowcolor=FG,
+        )
+        style.map("TScrollbar",
+            background=[("active", "#3a3a4a")],
+        )
+
+        # --- Separator ---
+        style.configure("TSeparator", background=BORDER)
+
+        # ── Classic tk widget defaults ────────────────────────────
+        self.root.option_add("*Listbox.background", "#2a2a3a")
+        self.root.option_add("*Listbox.foreground", FG)
+        self.root.option_add("*Listbox.selectBackground", SEL_BG)
+        self.root.option_add("*Listbox.selectForeground", SEL_FG)
+        self.root.option_add("*Text.background", "#2a2a3a")
+        self.root.option_add("*Text.foreground", FG)
+        self.root.option_add("*Text.insertBackground", FG)
+
     def _build_ui(self):
         px, py = 14, 6
         ipx, ipy = 12, 8
@@ -444,7 +538,7 @@ class App:
         row = ttk.Frame(sf)
         row.pack(fill="x", padx=ipx, pady=ipy)
         self.status_dot = tk.Canvas(row, width=14, height=14,
-                                    highlightthickness=0)
+                                    highlightthickness=0, bg="#1e1e2e")
         self.status_dot.pack(side="left")
         self.status_dot.create_oval(2, 2, 12, 12, fill="gray", tags="dot")
         ttk.Label(row, textvariable=self.status_var,
@@ -531,7 +625,7 @@ class App:
         ttk.Label(
             self.ai_details,
             text='e.g. "Professional and concise" or "Casual, friendly tone"',
-            foreground="gray", font=("", 8),
+            foreground="#888888", font=("", 8),
         ).pack(anchor="w", padx=20, pady=(2, 6))
 
         # Apply button + feedback row
@@ -582,7 +676,7 @@ class App:
 
         ttk.Label(
             self.root, text="Double-click a transcription to copy it",
-            foreground="gray",
+            foreground="#888888",
         ).pack(pady=(0, 8))
 
     # ── Hotkey capture ───────────────────────────────────────────────

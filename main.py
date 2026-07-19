@@ -432,14 +432,30 @@ class App:
     def _apply_dark_theme(self):
         """Apply always-on dark color scheme to all ttk and classic tk widgets."""
         # ── Color palette ─────────────────────────────────────────
-        BG        = "#121212"
-        SURFACE   = "#1e1e2e"
-        FG        = "#e0e0e0"
-        FG_SUBTLE = "#888888"
-        ACCENT    = "#22d3ee"
-        BORDER    = "#333333"
-        SEL_BG    = "#0e7490"
-        SEL_FG    = "#ffffff"
+        BG        = "#000000"   # pure black background
+        SURFACE   = "#4a4a4a"   # grey for box elements
+        HEADING   = "#FF8C00"   # dark orange for headings
+        FG        = "#ffffff"   # white for small / body text
+        FG_SUBTLE = "#cccccc"   # lighter grey for subtle text
+        ACCENT    = "#FF8C00"   # orange accent
+        BORDER    = "#666666"   # grey border
+        SEL_BG    = "#FF8C00"   # orange selection
+        SEL_FG    = "#000000"   # black text on orange selection
+        ENTRY_BG  = "#3a3a3a"   # slightly lighter grey for input fields
+        BTN_BG    = "#555555"   # button background
+        BTN_HOVER = "#666666"   # button hover
+        BTN_PRESS  = "#3a3a3a"   # button pressed
+        DISABLED_FG = "#777777"  # disabled text
+
+        # Store palette for use in other methods
+        self.theme = {
+            "bg": BG, "surface": SURFACE, "heading": HEADING,
+            "fg": FG, "fg_subtle": FG_SUBTLE, "accent": ACCENT,
+            "border": BORDER, "sel_bg": SEL_BG, "sel_fg": SEL_FG,
+            "entry_bg": ENTRY_BG, "btn_bg": BTN_BG,
+            "btn_hover": BTN_HOVER, "btn_press": BTN_PRESS,
+            "disabled_fg": DISABLED_FG,
+        }
 
         # ── Root window ───────────────────────────────────────────
         self.root.configure(bg=BG)
@@ -453,23 +469,24 @@ class App:
 
         # --- Base frame surfaces ---
         style.configure("TFrame",       background=SURFACE)
-        style.configure("TLabelframe",  background=SURFACE, foreground=FG,
+        style.configure("TLabelframe",  background=SURFACE, foreground=HEADING,
                         bordercolor=BORDER, darkcolor=BORDER, lightcolor=BORDER)
-        style.configure("TLabelframe.Label", background=SURFACE, foreground=FG)
+        style.configure("TLabelframe.Label", background=SURFACE, foreground=HEADING,
+                        font=("", 10, "bold"))
 
         # --- Labels ---
         style.configure("TLabel", background=SURFACE, foreground=FG)
 
         # --- Buttons ---
         style.configure("TButton",
-            background="#2a2a3a", foreground=FG,
-            bordercolor=BORDER, darkcolor="#1a1a2a", lightcolor="#3a3a4a",
+            background=BTN_BG, foreground=FG,
+            bordercolor=BORDER, darkcolor=BTN_PRESS, lightcolor=BTN_HOVER,
             focuscolor="none",
         )
         style.map("TButton",
-            background=[("active", "#3a3a4a"), ("pressed", "#1a1a2a"),
-                        ("disabled", "#1a1a2a")],
-            foreground=[("disabled", "#555555")],
+            background=[("active", BTN_HOVER), ("pressed", BTN_PRESS),
+                        ("disabled", BTN_PRESS)],
+            foreground=[("disabled", DISABLED_FG)],
         )
 
         # --- Checkbuttons ---
@@ -484,24 +501,24 @@ class App:
 
         # --- Combobox ---
         style.configure("TCombobox",
-            fieldbackground="#2a2a3a", background="#2a2a3a",
+            fieldbackground=ENTRY_BG, background=ENTRY_BG,
             foreground=FG, arrowcolor=FG,
             bordercolor=BORDER, darkcolor=BORDER, lightcolor=BORDER,
         )
         style.map("TCombobox",
-            fieldbackground=[("readonly", "#2a2a3a")],
+            fieldbackground=[("readonly", ENTRY_BG)],
             foreground=[("readonly", FG)],
-            selectbackground=[("readonly", "#2a2a3a")],
+            selectbackground=[("readonly", ENTRY_BG)],
             selectforeground=[("readonly", FG)],
         )
-        self.root.option_add("*TCombobox*Listbox.background", "#2a2a3a")
+        self.root.option_add("*TCombobox*Listbox.background", ENTRY_BG)
         self.root.option_add("*TCombobox*Listbox.foreground", FG)
         self.root.option_add("*TCombobox*Listbox.selectBackground", SEL_BG)
         self.root.option_add("*TCombobox*Listbox.selectForeground", SEL_FG)
 
         # --- Entry ---
         style.configure("TEntry",
-            fieldbackground="#2a2a3a", foreground=FG,
+            fieldbackground=ENTRY_BG, foreground=FG,
             bordercolor=BORDER, darkcolor=BORDER, lightcolor=BORDER,
             insertcolor=FG,
         )
@@ -512,18 +529,18 @@ class App:
             bordercolor=BG, arrowcolor=FG,
         )
         style.map("TScrollbar",
-            background=[("active", "#3a3a4a")],
+            background=[("active", BTN_HOVER)],
         )
 
         # --- Separator ---
         style.configure("TSeparator", background=BORDER)
 
         # ── Classic tk widget defaults ────────────────────────────
-        self.root.option_add("*Listbox.background", "#2a2a3a")
+        self.root.option_add("*Listbox.background", ENTRY_BG)
         self.root.option_add("*Listbox.foreground", FG)
         self.root.option_add("*Listbox.selectBackground", SEL_BG)
         self.root.option_add("*Listbox.selectForeground", SEL_FG)
-        self.root.option_add("*Text.background", "#2a2a3a")
+        self.root.option_add("*Text.background", ENTRY_BG)
         self.root.option_add("*Text.foreground", FG)
         self.root.option_add("*Text.insertBackground", FG)
 
@@ -538,7 +555,7 @@ class App:
         row = ttk.Frame(sf)
         row.pack(fill="x", padx=ipx, pady=ipy)
         self.status_dot = tk.Canvas(row, width=14, height=14,
-                                    highlightthickness=0, bg="#1e1e2e")
+                                    highlightthickness=0, bg=self.theme["surface"])
         self.status_dot.pack(side="left")
         self.status_dot.create_oval(2, 2, 12, 12, fill="gray", tags="dot")
         ttk.Label(row, textvariable=self.status_var,
@@ -625,7 +642,7 @@ class App:
         ttk.Label(
             self.ai_details,
             text='e.g. "Professional and concise" or "Casual, friendly tone"',
-            foreground="#888888", font=("", 8),
+            foreground=self.theme["fg_subtle"], font=("", 8),
         ).pack(anchor="w", padx=20, pady=(2, 6))
 
         # Apply button + feedback row
@@ -676,7 +693,7 @@ class App:
 
         ttk.Label(
             self.root, text="Double-click a transcription to copy it",
-            foreground="#888888",
+            foreground=self.theme["fg_subtle"],
         ).pack(pady=(0, 8))
 
     # ── Hotkey capture ───────────────────────────────────────────────
@@ -740,7 +757,7 @@ class App:
         # Clear any stale error/feedback from the previous provider
         self.ai_error_var.set("")
         self.ai_feedback_var.set("(unsaved)")
-        self.ai_feedback_lbl.config(foreground="#888888")
+        self.ai_feedback_lbl.config(foreground=self.theme["fg_subtle"])
 
     def _apply_ai_config(self):
         """Explicitly save all AI settings and give visual confirmation."""
